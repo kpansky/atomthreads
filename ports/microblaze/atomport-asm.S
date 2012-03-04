@@ -159,21 +159,15 @@
      in a critical section
      */
   andi r31, r31, MSR_IE
-  beqi r31, 1f
-  nop
-
-  /* Load the R31 and return */
+  beqid r31, 1f
   lwi r31, r1, AC_R31
-  addik r1, r1, AC_SIZE
+
   rtid r15, 0
-  nop
+  addik r1, r1, AC_SIZE
 
 1:
-  /* Load the R31 and return */
-  lwi r31, r1, AC_R31
-  addik r1, r1, AC_SIZE
   rtsd r15, 0
-  nop
+  addik r1, r1, AC_SIZE
 
 .endm
 
@@ -249,9 +243,8 @@ archThreadContextInit:
   
   lwi r15, r1, 0
   lwi r19, r1, 4
-  addik r1, r1, 8
   rtsd r15, 8
-  nop
+  addik r1, r1, 8
 
 /**
  * \b archFirstThreadRestore
@@ -350,6 +343,5 @@ archContextSwitch:
 archContextSwitchReturn:
   lwi r19, r1, 4
   lwi r15, r1, 0
-  addik r1, r1, 8
   rtsd r15, 8
-  nop
+  addik r1, r1, 8
