@@ -1,0 +1,95 @@
+---------------------------------------------------------------------------
+
+Library:      Atomthreads
+Author:       Kevin Pansky <info@atomthreads.com>
+Website:      http://atomthreads.com
+License:      BSD Revised
+
+---------------------------------------------------------------------------
+
+MICROBLAZE PORT
+
+This folder contains a port of the Atomthreads real time kernel for the
+MicroBlaze processor architecture.
+
+All of the cross-platform kernel code is contained in the top-level 
+'kernel' folder, while ports to specific CPU architectures are contained in
+the 'ports' folder tree. A port to a CPU architecture can comprise just one
+or two modules which provide the architecture-specific functionality, such
+as the context-switch routine which saves and restores processor registers
+on a thread switch. In this case, the kernel port is split into two files:
+
+ * atomport.c: Those functions which can be written in C
+ * atomport-asm.s: The main register save/restore assembler routines
+
+Each Atomthreads port requires also a header file which describes various
+architecture-specific details such as appropriate types for 8-bit, 16-bit
+etc variables, the port's system tick frequency, and macros for performing
+interrupt lockouts / critical sections:
+
+ * atomuser.h: Port-specific header required by the kernel for each port
+
+A couple of additional source files are also included here:
+
+ * tests-main.c: Main application file (used for launching automated tests)
+
+Atomthreads includes a suite of automated tests which prove the key OS
+functionality, and can be used with any architecture ports. This port
+provides an easy mechanism for building, downloading and running the test
+suite to prove the OS on your target.
+
+The port was carried out and tested using the Xilinx generated Standalone 
+BSP.  Platform and compiler specific code has been kept to an absolute 
+minimum.
+
+
+---------------------------------------------------------------------------
+
+PREREQUISITES
+
+TBD:
+
+
+---------------------------------------------------------------------------
+
+BUILDING THE SOURCE
+
+TBD:
+Code was tested by adding required files to a SDK project exported from the
+EDK.  Makefile for building on the commandline is TBD.
+
+
+---------------------------------------------------------------------------
+
+PROGRAMMING TO THE TARGET DEVICE
+
+TBD
+
+
+---------------------------------------------------------------------------
+
+RUNNING THE AUTOMATED TESTS
+
+TBD
+
+
+---------------------------------------------------------------------------
+
+WRITING APPLICATIONS
+
+The easiest way to start a new application which utilises the Atomthreads
+scheduler is to base your main application startup on tests-main.c. This
+initialises the OS, sets up a UART and calls out to the test module entry
+functions. You can generally simply replace the call to the test modules by
+a call to your own application startup code.
+
+
+---------------------------------------------------------------------------
+
+RAM FOOTPRINT & STACK USAGE
+
+TBD:
+
+
+---------------------------------------------------------------------------
+
