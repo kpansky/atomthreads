@@ -47,16 +47,16 @@ minimum.
 
 PREREQUISITES
 
-TBD:
+TBD MCS:
 
 
 ---------------------------------------------------------------------------
 
 BUILDING THE SOURCE
 
-TBD:
-Code was tested by adding required files to a SDK project exported from the
-EDK.  Makefile for building on the commandline is TBD.
+TBD MCS:
+Code was tested by adding required files to a Xilinx SDK project exported from the
+Xilinx EDK.  Makefile for building on the commandline is TBD.
 
 
 ---------------------------------------------------------------------------

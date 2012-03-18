@@ -82,7 +82,7 @@ static uint32_t idle_thread_stack[IDLE_STACK_SIZE_BYTES/4];
 
 /* Forward declarations */
 static void main_thread_func (uint32_t data);
-
+void microblazeInitSystemTickTimer(void);
 
 /**
  * \b main

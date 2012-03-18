@@ -31,11 +31,42 @@
 #include "atom.h"
 #include "xparameters.h"
 #include "mb_interface.h"
-#include "xtmrctr.h"
-#include "xintc.h"
 
+#if defined(XPAR_XIOMODULE_NUM_INSTANCES)
+
+/* We are using the Microblaze MCS */
+
+#include "xiomodule.h" 
+static XIOModule myIOModule;
+
+#define myIntc myIOModule
+#define myTmrCtr myIOModule
+#define XPAR_XPS_INTC_0_DEVICE_ID XPAR_IOMODULE_0_DEVICE_ID
+#define XPAR_XPS_INTC_0_XPS_TIMER_0_INTERRUPT_INTR 3
+#define XPAR_XPS_TIMER_0_DEVICE_ID 0
+#define XIntc_Initialize XIOModule_Initialize
+#define XIntc_SetOptions XIOModule_SetOptions
+#define XIntc_Connect XIOModule_Connect
+#define XIntc_Start(a,b) XIOModule_Start(a)
+#define XIntc_Enable XIOModule_Enable
+#define XIntc_DeviceInterruptHandler XIOModule_DeviceInterruptHandler
+#define XTmrCtr_Initialize XIOModule_Timer_Initialize
+#define XTmrCtr_InterruptHandler XIOModule_Timer_InterruptHandler
+#define XTmrCtr_SetOptions XIOModule_Timer_SetOptions
+#define XTmrCtr_SetResetValue XIOModule_SetResetValue
+#define XTmrCtr_Start XIOModule_Timer_Start
+
+#else
+
+/* We are using a Microblaze from EDK */
+#include "xintc.h"
+#include "xtmrctr.h"
 static XIntc myIntc;
 static XTmrCtr myTmrCtr;
+
+#endif
+
+
 volatile uint32_t myTmrCtrIntOccurred;
 
 /**
@@ -54,14 +85,14 @@ volatile uint32_t myTmrCtrIntOccurred;
  */
 void microblazeInterruptWrapper(void *DataPtr)
 {
-	atomIntEnter();
-	myTmrCtrIntOccurred = FALSE;
-	XIntc_DeviceInterruptHandler(DataPtr);
-	if (myTmrCtrIntOccurred == TRUE)
-	{
-		atomTimerTick();
-	}
-	atomIntExit(TRUE);
+  atomIntEnter();
+  myTmrCtrIntOccurred = FALSE;
+  XIntc_DeviceInterruptHandler(DataPtr);
+  if (myTmrCtrIntOccurred == TRUE)
+  {
+    atomTimerTick();
+  }
+  atomIntExit(TRUE);
 }
 
 /**
@@ -74,12 +105,9 @@ void microblazeInterruptWrapper(void *DataPtr)
  *
  * @return None
  */
-void microblazeTimerHandler(void *CallBackRef, uint8_t TmrCtrNumber)
+void microblazeTimerHandler(void *CallBackRef)
 { 
-  if (TmrCtrNumber == 0) 
-  {
-  	myTmrCtrIntOccurred = TRUE;
-  }
+  myTmrCtrIntOccurred = TRUE;
 }
 
 /**
@@ -96,15 +124,15 @@ void microblazeInitSystemTickTimer ( void )
 
   /* Setup the interrupt controller with the timer enabled */  
   XIntc_Initialize(&myIntc, XPAR_XPS_INTC_0_DEVICE_ID);
+  XIntc_SetOptions(&myIntc, XIN_SVC_ALL_ISRS_OPTION);
   XIntc_Connect(&myIntc, XPAR_XPS_INTC_0_XPS_TIMER_0_INTERRUPT_INTR,
-                (XInterruptHandler)XTmrCtr_InterruptHandler, &myTmrCtr);
+                (XInterruptHandler)microblazeTimerHandler, &myTmrCtr);
   XIntc_Start(&myIntc, XIN_REAL_MODE);
   XIntc_Enable(&myIntc, XPAR_XPS_INTC_0_XPS_TIMER_0_INTERRUPT_INTR);
 
   /* Set our timer to generate automatic interrupts at a SYSTEM_TICKS_PER_SEC rate */
   XTmrCtr_Initialize(&myTmrCtr, XPAR_XPS_TIMER_0_DEVICE_ID);
-  XTmrCtr_SetOptions(&myTmrCtr, 0, XTC_DOWN_COUNT_OPTION | XTC_INT_MODE_OPTION | XTC_AUTO_RELOAD_OPTION);
-  XTmrCtr_SetHandler(&myTmrCtr, (XTmrCtr_Handler)microblazeTimerHandler, NULL);
+  XTmrCtr_SetOptions(&myTmrCtr, 0, XTC_INT_MODE_OPTION | XTC_AUTO_RELOAD_OPTION);
   XTmrCtr_SetResetValue(&myTmrCtr, 0, XPAR_CPU_CORE_CLOCK_FREQ_HZ / SYSTEM_TICKS_PER_SEC);
   XTmrCtr_Start(&myTmrCtr, 0);
 }

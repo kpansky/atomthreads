@@ -31,12 +31,16 @@
 #ifndef __ATOM_PORT_H
 #define __ATOM_PORT_H
 
+#include "xparameters.h"
 #include "mb_interface.h"
+
+/* For NULL */
+#include <string.h>
 
 /* Required number of system ticks per second (normally 100 for 10ms tick) */
 #define SYSTEM_TICKS_PER_SEC            100
 
-/* Size of each stack entry / stack alignment size (8 bits on AVR) */
+/* Size of each stack entry / stack alignment size */
 #define STACK_ALIGN_SIZE                sizeof(uint32_t)
 
 /**
@@ -44,11 +48,11 @@
  */
 #define uint8_t   unsigned char
 #define uint16_t  unsigned short
-#define uint32_t  unsigned long
+#define uint32_t  unsigned int
 #define uint64_t  unsigned long long
 #define int8_t    char
 #define int16_t   short
-#define int32_t   long
+#define int32_t   int
 #define int64_t   long long
 #define POINTER   void *
 
@@ -59,7 +63,7 @@
 
 
 /* Uncomment to enable stack-checking */
-#define ATOM_STACK_CHECKING
+/* #define ATOM_STACK_CHECKING */
 
 
 #endif /* __ATOM_PORT_H */
