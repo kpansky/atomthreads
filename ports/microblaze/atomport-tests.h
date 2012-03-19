@@ -41,9 +41,7 @@
 /* Xilinx documentation states that printf is not thread-safe, so wrap 
  * it around a critical section for safety.
  */
-//#define ATOMLOG printf
-//#define ATOMLOG(format, ...) {CRITICAL_STORE; CRITICAL_START(); printf(format, ##__VA_ARGS__); CRITICAL_END();}
-#define ATOMLOG(format, ...) {CRITICAL_STORE; CRITICAL_START(); print(format); CRITICAL_END();}
+#define ATOMLOG(format, ...) {CRITICAL_STORE; CRITICAL_START(); iprintf(format, ##__VA_ARGS__); CRITICAL_END();}
 
 /*
  * String location macro: for platforms which need to place strings in
