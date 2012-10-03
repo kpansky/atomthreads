@@ -28,11 +28,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-
 #include "atom.h"
 #include "atomtests.h"
 #include "atomtimer.h"
+#include <stdarg.h>
 
 /* Constants */
 
@@ -67,7 +66,7 @@
  * stack for application code local variables etc.
  * 
  */
-#define MAIN_STACK_SIZE_BYTES       4096
+#define MAIN_STACK_SIZE_BYTES       1024
 
 /* Local data */
 
@@ -83,6 +82,7 @@ static uint32_t idle_thread_stack[IDLE_STACK_SIZE_BYTES/4];
 /* Forward declarations */
 static void main_thread_func (uint32_t data);
 void microblazeInitSystemTickTimer(void);
+void log_itoa(int);
 
 /**
  * \b main
@@ -92,13 +92,12 @@ void microblazeInitSystemTickTimer(void);
  * Sets up the MicroBlaze hardware resources (system tick timer interrupt) necessary
  * for the OS to be started. Creates an application thread and starts the OS.
  */
-
 int main ( void )
 {
     int8_t status;
 
-	ATOMLOG("AtomThreads MicroBlaze Starting\n");
-	
+    ATOMLOG("\n\nAtomThreads MicroBlaze Starting\n\n");
+
     /**
      * Initialise the OS before creating our threads.
      */
@@ -201,3 +200,113 @@ static void main_thread_func (uint32_t data)
         atomTimerDelay(SYSTEM_TICKS_PER_SEC);
     }
 }
+
+/**
+ * \b ATOMLOG
+ *
+ * Printf like function loggint to stdout.
+ *
+ * Behaves similar to printf, but can accept only the simplest formats.
+ * Has the advantage of requiring relatively little stack space.
+ *
+ * @param[in] format The printf-style format string
+ * @param[in] ... The variable argument list
+ *
+ * @return None
+ */
+void ATOMLOG(char *format, ...)
+{
+  CRITICAL_STORE;
+  int ii=0;
+  int val_d = 0;
+  char *val_s = 0;
+  va_list ap;
+
+  CRITICAL_START();
+
+  va_start(ap, format);
+
+  for (ii=0; format[ii] != 0; ii++)
+  {
+    if (format[ii] == '%')
+    {
+      if (format[++ii] == 'd')
+      {
+        val_d = va_arg(ap,int);
+        log_itoa(val_d);
+      }
+      else if (format[++ii] == 's')
+      {
+        val_s = va_arg(ap,char*);
+        puts(val_s);
+      } 
+      else 
+      {
+        puts("%ERR");
+      }
+    }
+    else
+    {
+      if (format[ii] == '\n') putchar('\r');
+      putchar(format[ii]);
+    }
+  }
+
+  va_end(ap);
+
+  CRITICAL_END();
+}
+
+
+/**
+ * \b log_itoa
+ *
+ * Print an integer to stdout.
+ *
+ * Used for the ATOMLOG function.
+ *
+ * @param[in] data The signed integer value to convert
+ *
+ * @return None
+ */
+void log_itoa(int integer)
+{
+  /* Largest base 10 divisor that fits in 32 bits */
+  int div = 1000000000;
+  
+  /* Did we encounter MSB yet */
+  int fde = 0;
+
+  int rem = 0;
+
+  /* If we're zero, report so */
+  if (integer == 0) {
+    putchar('0');
+    return;
+  }
+
+  /* If we're negative, report so and make it positive */
+  if (integer < 0) {
+    integer = ~integer;
+    integer += 1;
+    putchar('-');
+  }
+
+  /* Divide and report until we have no more digits */
+  while (integer != 0) {
+
+    rem = integer / div;
+
+    if (rem != 0) fde = 1;
+
+    if (fde == 1) {
+      putchar('0' + rem);
+      integer -= rem * div;
+    }
+    div /= 10;
+  }
+  
+  return;
+}
+
+

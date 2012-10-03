@@ -37,11 +37,8 @@
 /* Prerequisite include for ATOMLOG() macro (via printf) */
 #include <stdio.h>
 
-/* Logger macro for viewing test results */
-/* Xilinx documentation states that printf is not thread-safe, so wrap 
- * it around a critical section for safety.
- */
-#define ATOMLOG(format, ...) {CRITICAL_STORE; CRITICAL_START(); iprintf(format, ##__VA_ARGS__); CRITICAL_END();}
+/* Logger function for viewing test results */
+void ATOMLOG(char *format, ...);
 
 /*
  * String location macro: for platforms which need to place strings in

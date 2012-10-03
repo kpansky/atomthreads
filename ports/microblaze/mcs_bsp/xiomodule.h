@@ -195,8 +195,6 @@ typedef struct {
 
 /* Functions and Function-like Macros */
 s32     XIOModule_Initialize(XIOModule * InstancePtr, u16 DeviceId);
-s32     XIOModule_Start(XIOModule * InstancePtr);
-void    XIOModule_Stop(XIOModule * InstancePtr);
 u32     XIOModule_IoReadWord(XIOModule *InstancePtr, u32 ByteOffset);
 u16     XIOModule_IoReadHalfword(XIOModule *InstancePtr, u32 ByteOffset);
 u8      XIOModule_IoReadByte(XIOModule *InstancePtr, u32 ByteOffset);
@@ -221,6 +219,9 @@ void    XIOModule_IoWriteByte(XIOModule *InstancePtr, u32 ByteOffset, u8 Data);
 #define XIOModule_InterruptHandler             XIOModule_Intc_InterruptHandler
 #define XIOModule_SetOptions                   XIOModule_Intc_SetOptions
 #define XIOModule_GetOptions                   XIOModule_Intc_GetOptions
+#define XIOModule_Start                        XIOModule_Intc_Start
+#define XIOModule_Stop                         XIOModule_Intc_Stop
+
 /* Private -
 #define XIOModule_EnableIntr                   XIOModule_Intc_EnableIntr
 #define XIOModule_DisableIntr                  XIOModule_Intc_DisableIntr
@@ -242,6 +243,9 @@ void    XIOModule_Intc_Acknowledge(XIOModule * InstancePtr, u8 Id);
 void    XIOModule_Intc_InterruptHandler(XIOModule * InstancePtr);
 s32     XIOModule_Intc_SetOptions(XIOModule * InstancePtr, u32 Options);
 u32     XIOModule_Intc_GetOptions(XIOModule * InstancePtr);
+s32     XIOModule_Intc_Start(XIOModule * InstancePtr);
+void    XIOModule_Intc_Stop(XIOModule * InstancePtr);
+
 
 /* Private -
 void    XIOModule_Intc_SetIntrSvcOption(u32 BaseAddress, u32 Option);

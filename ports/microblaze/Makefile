@@ -6,14 +6,15 @@
 #   make
 #
 
+#One of mcs, edk, or edk_le
+MB_PLATFORM = mcs
+
 # Location of build tools and atomthreads sources
 KERNEL_DIR=../../kernel
 TESTS_DIR=../../tests
-BSP_DIR = ./mcs_bsp
 CC=mb-gcc
 OBJCOPY=mb-objcopy
 SIZE=mb-size
-LITTLE_ENDIAN=true
 
 # Enable stack-checking.
 STACK_CHECK=true
@@ -24,8 +25,16 @@ BUILD_DIR=build
 # Port/application object files
 APP_OBJECTS = atomport.o tests-main.o
 APP_ASM_OBJECTS = atomport-asm.o
+
+ifeq ($(MB_PLATFORM),mcs)
+BSP_DIR = ./mcs_bsp
 BSP_OBJECTS = xiomodule.o
 BSP_LDSCRIPT = linker_bram_64k.ld
+else
+BSP_DIR = TODO
+BSP_OBJECTS = TODO
+BSP_LDSCRIPT = TODO
+endif
 
 # Kernel object files
 KERNEL_OBJECTS = atomkernel.o atomsem.o atommutex.o atomtimer.o atomqueue.o
@@ -47,7 +56,19 @@ vpath %.elf ./$(BUILD_DIR)
 vpath %.hex ./$(BUILD_DIR)
 
 # GCC flags
-CFLAGS=-g -Os -Wall -Werror -mlittle-endian
+CFLAGS=-g -Os -Wall -Werror
+
+ifeq ($(MB_PLATFORM),mcs)
+CFLAGS += -mlittle-endian -DMB_MCS
+endif
+
+ifeq ($(MB_PLATFORM),edk_le)
+CFLAGS += -mlittle-endian -DMB_EDK
+endif
+
+ifeq ($(MB_PLATFORM),edk)
+CFLAGS += -DMB_EDK
+endif
 
 # Enable stack-checking (disable if not required)
 ifeq ($(STACK_CHECK),true)

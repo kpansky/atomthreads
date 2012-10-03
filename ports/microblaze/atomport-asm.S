@@ -28,41 +28,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define AC_MSR 0
-#define AC_R31 4
-#define AC_R30 8
-#define AC_R29 12
-#define AC_R28 16
-#define AC_R27 20
-#define AC_R26 24
-#define AC_R25 28
-#define AC_R24 32
-#define AC_R23 36
-#define AC_R22 40
-#define AC_R21 44
-#define AC_R20 48
-#define AC_R19 52
-#define AC_R18 56
-#define AC_R17 60
-#define AC_R16 64
-#define AC_R15 68
-#define AC_R14 72
-#define AC_R13 76
-#define AC_R12 80
-#define AC_R11 84
-#define AC_R10 88
-#define AC_R9 92
-#define AC_R8 96
-#define AC_R7 100
-#define AC_R6 108
-#define AC_R5 112
-#define AC_R4 116
-#define AC_R3 120
-#define AC_R2 124
+#define AC_MSR  0
+#define AC_R31  4
+#define AC_R30  8
+#define AC_R29  12
+#define AC_R28  16
+#define AC_R27  20
+#define AC_R26  24
+#define AC_R25  28
+#define AC_R24  32
+#define AC_R23  36
+#define AC_R22  40
+#define AC_R21  44
+#define AC_R20  48
+#define AC_R19  52
+#define AC_R18  56
+#define AC_R17  60
+#define AC_R16  64
+#define AC_R15  68
+#define AC_R14  72
+#define AC_R13  76
+#define AC_R12  80
+#define AC_R11  84
+#define AC_R10  88
+#define AC_R9   92
+#define AC_R8   96
+#define AC_R7   100
+#define AC_R6   108
+#define AC_R5   112
+#define AC_R4   116
+#define AC_R3   120
+#define AC_R2   124
 #define AC_SIZE 128
 
 /* keep only the ICE,DCE, fields.  MMU not supported currently */
-#define MSR_DEFAULT_MASK 0x00000042 
+#define MSR_DEFAULT_MASK 0x000000A2 
 #define MSR_IE 0x00000002
 
   .section .text
@@ -155,18 +155,19 @@
   lwi r31, r1, AC_MSR
   /* Check for interrupts enabled in the context's MSR */
   /* If interrupts not enabled, jump forward and keep disabled */
-  /* This can happen if a cooperative context switch happens 
-     in a critical section
-     */
+  /* This can happen if a cooperative context switch happens */
+  /* in a critical section */
   andi r31, r31, MSR_IE
-  beqid r31, 1f
+  beqid r31, 0f
   lwi r31, r1, AC_R31
 
-  rtid r15, 0
+  /* IE set in MSR */
+  rtid r15, 8
   addik r1, r1, AC_SIZE
 
-1:
-  rtsd r15, 0
+0: 
+  /* IE unset in MSR */
+  rtsd r15, 8
   addik r1, r1, AC_SIZE
 
 .endm
@@ -197,54 +198,48 @@
  */
 .global archThreadContextInit
 archThreadContextInit:
-  swi r5, r1, 4
-  swi r6, r1, 8
-  swi r7, r1, 12
-  swi r8, r1, 16
-  addik	r1, r1, -8
-  swi r19, r1, 4
-  swi r15, r1, 0
-
   /* R5 - tcb_ptr */
   /* R6 - stack_top */
   /* R7 - entry_point */
   /* R8 - entry_param */
 
-  /*Copy R1 to R19*/
-  addk r19, r1, r0 
-  
-  /*Copy stack_top to R1 for context store*/
-  addik r1, r6, 0
-  
-  /* Create stack space in the new TCB for the (non-existant)
-     "calling" function 
-     */
-  addik r1, r1, -12
-  swi r0, r1, 8 /* R19 */
-  swi r8, r1, 4 /* entry_param */
-  swi r0, r1, 0 /* link pointer -- should never happen.  System reset will occur... */
-  
-  /* Save context to stack */
+  addik r1, r1, -4
+  swi r31, r1, 0
+  addik r31, r1, 0
+
+  /* Load our new stack top */
+  addik r1, r6, -32
   STORE_CONTEXT
-  
-  /* Store the final stack_top to tcb_ptr->sp_save_ptr */
+
+  /* Now we are setting up our new context */
+  addik r6, r0, _SDA2_BASE_
+  swi r6, r1, AC_R2
+  addik r6, r8, 0
+  swi r6, r1, AC_R5
+  addik r6, r0, _SDA_BASE_
+  swi r6, r1, AC_R13
+  addik r6, r7, 0
+  swi r6. r1. AC_R14
+  addik r6, r7, -8
+  swi r6. r1. AC_R15
+
+  /* Patch the new context with interrupts enabled */
+  lwi r6, r1, AC_MSR
+  andi r6, r6, MSR_DEFAULT_MASK
+  ori r6, r6, MSR_IE
+  swi r6, r1, AC_MSR
+
+
+  /* Store the final stack for the new context to its tcb */
   swi r1, r5, 0
-  
-  /* Reuse r15 for initial msr */
-  lwi r15, r1, AC_MSR
-  andi r15, r15, MSR_DEFAULT_MASK  
-  ori r15, r15, MSR_IE
-  swi r15, r1, AC_MSR
-  swi r7, r1, AC_R15 /*R15 - entry point*/
-  swi r8, r1, AC_R5 /*R5 - entry_param*/
-  
-  /* Restore the original stack */
-  addk r1, r19, r0 
-  
-  lwi r15, r1, 0
-  lwi r19, r1, 4
-  rtsd r15, 8
-  addik r1, r1, 8
+
+  /* Restore our original context */
+  addik r1, r31, 0
+  lwi r31, r1, 0
+
+  rtsd r15,8
+  addik r1, r1, 4
+
 
 /**
  * \b archFirstThreadRestore
@@ -278,10 +273,6 @@ archThreadContextInit:
  */
 .global archFirstThreadRestore
 archFirstThreadRestore:
-  swi r5, r1, 4
-  addik r1,r1,-8
-  swi r19, r1, 4
-  swi r15, r1, 0
 
   /* R5 - new_tcb_ptr */
 
@@ -291,12 +282,7 @@ archFirstThreadRestore:
   /* Load context off stack */
   LOAD_CONTEXT
 
-archFirstThreadRestoreTrap:
-  /* Should never get here */
-  la r15, r0, archFirstThreadRestoreTrap
-  bra r15
-  nop
-  
+
 /*
  * \b archContextSwitch
  *
@@ -316,18 +302,9 @@ archFirstThreadRestoreTrap:
  */
 .global archContextSwitch
 archContextSwitch:
-  swi r5, r1, 4
-  swi r6, r1, 8
-  addik r1,r1,-8
-  swi r19, r1, 4
-  swi r15, r1, 0
-  
   /* R5 - old_tcb_ptr */
   /* R6 - new_tcb_ptr */
   
-  /* Set the return of our context to be past the context switch */
-  la r15, r0, archContextSwitchReturn
-
   /* Save context to stack */
   STORE_CONTEXT
   
@@ -339,9 +316,4 @@ archContextSwitch:
   
   /* Load context off stack */
   LOAD_CONTEXT
-  
-archContextSwitchReturn:
-  lwi r19, r1, 4
-  lwi r15, r1, 0
-  rtsd r15, 8
-  addik r1, r1, 8
+

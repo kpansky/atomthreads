@@ -58,8 +58,8 @@
 
 /* Critical region protection */
 #define CRITICAL_STORE      uint32_t __msr_reg
-#define CRITICAL_START()    __msr_reg = mfmsr(); microblaze_disable_interrupts()
-#define CRITICAL_END()      if (__msr_reg & 0x2) microblaze_enable_interrupts()
+#define CRITICAL_START()    ({__msr_reg = mfmsr(); microblaze_disable_interrupts();})
+#define CRITICAL_END()      ({if (__msr_reg & 0x2) microblaze_enable_interrupts();})
 
 
 /* Uncomment to enable stack-checking */

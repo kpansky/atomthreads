@@ -32,13 +32,15 @@
 #include "xparameters.h"
 #include "mb_interface.h"
 
-#if defined(XPAR_XIOMODULE_NUM_INSTANCES)
 
-/* We are using the Microblaze MCS */
-
-#include "xiomodule.h" 
+#if defined(MB_EDK)
+#include "xintc.h"
+#include "xtmrctr.h"
+static XIntc myIntc;
+static XTmrCtr myTmrCtr;
+#elif defined(MB_MCS)
+#include "xiomodule.h"
 static XIOModule myIOModule;
-
 #define myIntc myIOModule
 #define myTmrCtr myIOModule
 #define XPAR_XPS_INTC_0_DEVICE_ID XPAR_IOMODULE_0_DEVICE_ID
@@ -55,19 +57,10 @@ static XIOModule myIOModule;
 #define XTmrCtr_SetOptions XIOModule_Timer_SetOptions
 #define XTmrCtr_SetResetValue XIOModule_SetResetValue
 #define XTmrCtr_Start XIOModule_Timer_Start
-
-#else
-
-/* We are using a Microblaze from EDK */
-#include "xintc.h"
-#include "xtmrctr.h"
-static XIntc myIntc;
-static XTmrCtr myTmrCtr;
-
 #endif
 
 
-volatile uint32_t myTmrCtrIntOccurred;
+volatile uint32_t myTmrCtrIntOccurred = FALSE;
 
 /**
  * \b microblazeInterruptWrapper
@@ -83,16 +76,19 @@ volatile uint32_t myTmrCtrIntOccurred;
  *
  * @return None
  */
-void microblazeInterruptWrapper(void *DataPtr)
+void microblazeInterruptWrapper(void *arg)
 {
   atomIntEnter();
   myTmrCtrIntOccurred = FALSE;
-  XIntc_DeviceInterruptHandler(DataPtr);
+  
+  XIntc_DeviceInterruptHandler(arg);
+  
   if (myTmrCtrIntOccurred == TRUE)
   {
     atomTimerTick();
   }
-  atomIntExit(TRUE);
+
+  atomIntExit(myTmrCtrIntOccurred);
 }
 
 /**
@@ -101,7 +97,6 @@ void microblazeInterruptWrapper(void *DataPtr)
  * Interrupt handler for the timer tick.
  *
  * @param[in] CallbackRef - unused
- * @param[in] TmrCtrNumber timer number that caused this interrupt
  *
  * @return None
  */
@@ -136,3 +131,4 @@ void microblazeInitSystemTickTimer ( void )
   XTmrCtr_SetResetValue(&myTmrCtr, 0, XPAR_CPU_CORE_CLOCK_FREQ_HZ / SYSTEM_TICKS_PER_SEC);
   XTmrCtr_Start(&myTmrCtr, 0);
 }
+

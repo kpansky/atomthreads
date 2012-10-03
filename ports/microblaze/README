@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------
 
 Library:      Atomthreads
-Author:       Kevin Pansky <info@atomthreads.com>
+Author:       Kevin Pansky <kevin.pansky@gmail.com>
 Website:      http://atomthreads.com
 License:      BSD Revised
 
@@ -47,14 +47,17 @@ minimum.
 
 PREREQUISITES
 
-TBD MCS:
-
+Xilinx FPGA board
+Xilinx ISE (WebPack edition works for the MicroBlaze MCS)
 
 ---------------------------------------------------------------------------
 
 BUILDING THE SOURCE
 
-TBD MCS:
+MicroBlaze MCS:
+Simply type make inside of the microblaze port directory.
+
+MicroBlaze EDK:
 Code was tested by adding required files to a Xilinx SDK project exported from the
 Xilinx EDK.  Makefile for building on the commandline is TBD.
 
@@ -63,14 +66,30 @@ Xilinx EDK.  Makefile for building on the commandline is TBD.
 
 PROGRAMMING TO THE TARGET DEVICE
 
-TBD
+Programming the MicroBlaze with the object code is somewhat outside of the
+scope of this document.  Relevant information can be found for the 
+MicroBlaze MCS at http://www.xilinx.com/tools/mb_mcs.htm.
 
+Alternatively, if you have built your MicroBlaze with the debug module
+enabled and have a Xilinx supported JTAG cable, it is possible to use xmd 
+as follows.
+
+Shell 1:  xmd -opt support/xmd-test.cmd
+
+Shell 2:  mb-gdb
+  From here you can enter the following:
+  'target remote :1234'
+  'file <YOUR ELF HERE>'
+  'load'
+  'c'
 
 ---------------------------------------------------------------------------
 
 RUNNING THE AUTOMATED TESTS
 
-TBD
+You must have xmd running and connected to the target (example above)
+
+Then run 'mb-gdb --command=support/tests.cmd'
 
 
 ---------------------------------------------------------------------------
@@ -88,7 +107,9 @@ a call to your own application startup code.
 
 RAM FOOTPRINT & STACK USAGE
 
-TBD:
+Currently total program size for the test suite with stack checking on is 
+approximately 40-50kB with -O0 and 30-40kB with -0s.  This seems fairly 
+large and there may be room for improvement in this regard.
 
 
 ---------------------------------------------------------------------------

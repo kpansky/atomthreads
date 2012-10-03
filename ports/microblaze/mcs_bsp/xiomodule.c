@@ -166,24 +166,6 @@ s32 XIOModule_Initialize(XIOModule * InstancePtr, u16 DeviceId)
   return XST_SUCCESS;
 }
 
-s32 XIOModule_Start(XIOModule * InstancePtr)
-{
-  ASSERT(InstancePtr != NULL);
-  ASSERT(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
-
-  InstancePtr->IsStarted = XIL_COMPONENT_IS_STARTED;
-
-  return XST_SUCCESS;
-}
-
-void XIOModule_Stop(XIOModule * InstancePtr)
-{
-  ASSERT(InstancePtr != NULL);
-  ASSERT(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
-
-  InstancePtr->IsStarted = 0;
-}
-
 u32 XIOModule_IoReadWord(XIOModule *InstancePtr, u32 ByteOffset)
 {
   ASSERT(InstancePtr != NULL);
@@ -416,6 +398,24 @@ u32 XIOModule_Intc_GetOptions(XIOModule * InstancePtr)
     ASSERT(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
     
     return InstancePtr->CfgPtr->IntcOptions;
+}
+
+s32 XIOModule_Intc_Start(XIOModule * InstancePtr)
+{
+  ASSERT(InstancePtr != NULL);
+  ASSERT(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+  InstancePtr->IsStarted = XIL_COMPONENT_IS_STARTED;
+
+  return XST_SUCCESS;
+}
+
+void XIOModule_Intc_Stop(XIOModule * InstancePtr)
+{
+  ASSERT(InstancePtr != NULL);
+  ASSERT(InstancePtr->IsReady == XIL_COMPONENT_IS_READY);
+
+  InstancePtr->IsStarted = 0;
 }
 
 
